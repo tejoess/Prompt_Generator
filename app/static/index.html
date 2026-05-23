@@ -1,0 +1,665 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ScriptletAI Prompt Generator</title>
+  <style>
+    :root {
+      --bg-app: #eef1f4;
+      --bg-panel: #ffffff;
+      --bg-sidebar-top: #4d6076;
+      --bg-sidebar-bottom: #3f5165;
+      --bg-input: #f8fafb;
+      --border: #d9e0e6;
+      --border-soft: #e7edf2;
+      --text-main: #2f3a45;
+      --text-muted: #6c7a88;
+      --green: #38c96b;
+      --green-hover: #2fb55f;
+      --green-soft: #eaf9ef;
+      --shadow: 0 8px 24px rgba(33, 45, 58, 0.08);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: "Segoe UI", Arial, sans-serif;
+      background: var(--bg-app);
+      color: var(--text-main);
+    }
+
+    .app-shell {
+      min-height: 100vh;
+      display: grid;
+      grid-template-columns: 270px 1fr;
+    }
+
+    .sidebar {
+      background: linear-gradient(180deg, var(--bg-sidebar-top), var(--bg-sidebar-bottom));
+      color: white;
+      padding: 28px 18px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    .brand-card {
+      background: rgba(255,255,255,0.94);
+      border-radius: 14px;
+      padding: 22px 18px;
+      text-align: center;
+      color: var(--green);
+      font-size: 22px;
+      font-weight: 700;
+      box-shadow: var(--shadow);
+      margin-bottom: 28px;
+    }
+
+    .brand-card small {
+      display: block;
+      color: #6c7a88;
+      font-size: 12px;
+      margin-top: 4px;
+      font-weight: 600;
+    }
+
+    .sidebar-status {
+      background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(255,255,255,0.08);
+      color: #e9fff0;
+      border-radius: 12px;
+      padding: 12px 14px;
+      font-size: 14px;
+    }
+
+    .main { padding: 26px; }
+
+    .workspace {
+      background: #f6f8fa;
+      border: 1px solid var(--border-soft);
+      border-radius: 22px;
+      padding: 24px;
+      min-height: calc(100vh - 52px);
+    }
+
+    .topbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 22px;
+    }
+
+    .page-title {
+      margin: 0;
+      font-size: 26px;
+      font-weight: 700;
+    }
+
+    .page-subtitle {
+      margin: 6px 0 0;
+      color: var(--text-muted);
+      font-size: 14px;
+    }
+
+    .btn {
+      border: none;
+      border-radius: 10px;
+      padding: 11px 16px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: 0.2s ease;
+    }
+
+    .btn-primary {
+      background: var(--green);
+      color: white;
+    }
+
+    .btn-primary:hover { background: var(--green-hover); }
+
+    .btn-secondary {
+      background: white;
+      color: var(--text-main);
+      border: 1px solid var(--border);
+    }
+
+    .btn-secondary:hover { background: #f4f7f9; }
+
+    .btn-small {
+      padding: 8px 12px;
+      font-size: 13px;
+      border-radius: 8px;
+    }
+
+    .btn-danger {
+      background: #fff1f1;
+      color: #cb4e4e;
+      border: 1px solid #f3c8c8;
+    }
+
+    .panel {
+      background: var(--bg-panel);
+      border: 1px solid var(--border-soft);
+      border-radius: 18px;
+      padding: 20px;
+      box-shadow: var(--shadow);
+      margin-bottom: 20px;
+    }
+
+    .panel h2 {
+      margin: 0 0 16px;
+      font-size: 18px;
+    }
+
+    .tabs {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-bottom: 18px;
+    }
+
+    .tab-btn {
+      padding: 10px 14px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      background: white;
+      cursor: pointer;
+      font-weight: 600;
+      color: var(--text-main);
+    }
+
+    .tab-btn.active {
+      background: var(--green-soft);
+      border-color: #ccefd8;
+      color: #24914b;
+    }
+
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 18px;
+    }
+
+    .grid-3 {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 14px;
+    }
+
+    .field {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+
+    .field label {
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    input, textarea, select {
+      width: 100%;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      background: var(--bg-input);
+      padding: 12px 14px;
+      font-size: 14px;
+      color: var(--text-main);
+      outline: none;
+    }
+
+    textarea {
+      min-height: 110px;
+      resize: vertical;
+    }
+
+    .check-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+
+    .check-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 12px;
+      background: #fbfcfd;
+      border: 1px solid var(--border-soft);
+      border-radius: 10px;
+    }
+
+    .check-item input {
+      width: auto;
+      margin: 0;
+    }
+
+    .action-row {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-top: 10px;
+    }
+
+    .meta-card {
+      background: #fbfcfd;
+      border: 1px solid var(--border-soft);
+      border-radius: 12px;
+      padding: 14px;
+    }
+
+    .meta-card .label {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-bottom: 6px;
+      text-transform: uppercase;
+    }
+
+    .meta-card .value {
+      font-size: 15px;
+      font-weight: 700;
+      word-break: break-word;
+    }
+
+    .section-title {
+      margin: 18px 0 10px;
+      font-size: 15px;
+      font-weight: 700;
+    }
+
+    .subpanel {
+      border: 1px solid var(--border-soft);
+      border-radius: 14px;
+      padding: 14px;
+      background: #fbfcfd;
+      margin-bottom: 14px;
+    }
+
+    .subpanel-title {
+      font-size: 14px;
+      font-weight: 700;
+      margin-bottom: 10px;
+    }
+
+    .row-inline {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .synonym-row,
+    .group-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr auto;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+
+    .preview-box {
+      background: #f7f9fb;
+      border: 1px solid var(--border-soft);
+      border-radius: 12px;
+      padding: 14px;
+      font-size: 13px;
+      line-height: 1.55;
+      white-space: pre-wrap;
+      word-break: break-word;
+      min-height: 90px;
+    }
+
+    pre {
+      margin: 0;
+      white-space: pre-wrap;
+      word-break: break-word;
+      background: #f7f9fb;
+      border: 1px solid var(--border-soft);
+      border-radius: 12px;
+      padding: 14px;
+      font-size: 13px;
+      line-height: 1.55;
+      max-height: 360px;
+      overflow: auto;
+    }
+
+    .status-badge {
+      display: inline-block;
+      padding: 8px 12px;
+      border-radius: 999px;
+      font-weight: 700;
+      font-size: 13px;
+      background: var(--green-soft);
+      color: #24914b;
+      border: 1px solid #ccefd8;
+    }
+
+    .status-badge.invalid {
+      background: #fff1f1;
+      color: #cb4e4e;
+      border-color: #f3c8c8;
+    }
+
+    .issues {
+      margin: 12px 0 0;
+      padding-left: 18px;
+      color: #b84f4f;
+    }
+
+    .muted {
+      color: var(--text-muted);
+      font-size: 13px;
+    }
+
+    @media (max-width: 1100px) {
+      .app-shell { grid-template-columns: 1fr; }
+      .grid-2, .grid-3, .synonym-row, .group-row { grid-template-columns: 1fr; }
+      .topbar { flex-direction: column; align-items: flex-start; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar">
+      <div>
+        <div class="brand-card">
+          ScriptletAI
+          <small>Prompt Generator</small>
+        </div>
+      </div>
+      <div class="sidebar-status">● Local server running</div>
+    </aside>
+
+    <main class="main">
+      <div class="workspace">
+        <div class="topbar">
+          <div>
+            <h1 class="page-title">AI Prompt Library Builder</h1>
+            <p class="page-subtitle">Choose a prompt type and generate a ScriptletAI-compliant configuration.</p>
+          </div>
+          <button class="btn btn-secondary" onclick="location.reload()">Refresh</button>
+        </div>
+
+        <section class="panel">
+          <h2>Prompt Type</h2>
+          <div class="tabs">
+            <button class="tab-btn active" data-tab="standard">Standard</button>
+            <button class="tab-btn" data-tab="title">Title</button>
+            <button class="tab-btn" data-tab="metadata">Metadata</button>
+            <button class="tab-btn" data-tab="section_number">Section Number</button>
+            <button class="tab-btn" data-tab="drawing">Drawing / P&ID</button>
+            <button class="tab-btn" data-tab="multirow_tabular">Multi-row @tabular</button>
+            <button class="tab-btn" data-tab="ai_over_table">AI-over-Table</button>
+            <button class="tab-btn" data-tab="table_placeholder">Table Placeholder ##</button>
+          </div>
+        </section>
+
+        <section class="panel">
+          <h2>Prompt Input</h2>
+
+          <div class="field">
+            <label for="placeholder_name">Placeholder Name</label>
+            <input id="placeholder_name" value="[URS Requirement_Utility]" />
+          </div>
+
+          <div class="field">
+            <label for="document_types">Document Types (comma separated)</label>
+            <input id="document_types" value="URS,FS" />
+          </div>
+
+          <div id="tab-standard" class="tab-content active">
+            <div class="field">
+              <label for="requirement_text_standard">Requirement Text</label>
+              <textarea id="requirement_text_standard">Extract the exact utility requirements from URS or FS documents.</textarea>
+            </div>
+            <div class="grid-2">
+              <div class="field">
+                <label for="expected_json_key_standard">JSON Key</label>
+                <input id="expected_json_key_standard" value="answer" />
+              </div>
+              <div class="field">
+                <label for="chunk_count_standard">Chunk Count</label>
+                <input id="chunk_count_standard" type="number" value="8" min="1" max="16" />
+              </div>
+            </div>
+          </div>
+          
+          <div id="tab-title" class="tab-content">
+           <div class="field">
+            <label>Title Extraction Prompt</label>
+            <textarea id="requirement_text_title">Extract the title of the document</textarea>
+           </div>
+           <div class="grid-2">
+            <div class="field">
+             <label>JSON Output Key</label>
+             <input id="expected_json_key_title" value="title">
+            </div>
+            <div class="field">
+             <label>Chunk Count</label>
+             <input id="chunk_count_title" type="number" value="3" min="1" max="8">
+            </div>
+           </div>
+            <div class="muted">
+              Title prompts automatically analyze the first pages of the document.
+            </div>
+           </div>          
+
+          <div id="tab-metadata" class="tab-content">
+            <div class="field">
+              <label for="requirement_text_metadata">Metadata Requirement</label>
+              <textarea id="requirement_text_metadata">Extract the document title from the header, footer, title area, or first pages.</textarea>
+            </div>
+            <div class="grid-2">
+              <div class="field">
+                <label for="expected_json_key_metadata">JSON Key</label>
+                <input id="expected_json_key_metadata" value="answer" />
+              </div>
+              <div class="field">
+                <label for="chunk_count_metadata">Chunk Count</label>
+                <input id="chunk_count_metadata" type="number" value="8" min="1" max="16" />
+              </div>
+            </div>
+          </div>
+
+          <div id="tab-section_number" class="tab-content">
+            <div class="field">
+              <label for="requirement_text_section">Section Number Requirement</label>
+              <textarea id="requirement_text_section">Find the exact section number for Bill of Materials requirements.</textarea>
+            </div>
+            <div class="grid-2">
+              <div class="field">
+                <label for="expected_json_key_section">JSON Key</label>
+                <input id="expected_json_key_section" value="answer" />
+              </div>
+              <div class="field">
+                <label for="chunk_count_section">Chunk Count</label>
+                <input id="chunk_count_section" type="number" value="8" min="1" max="16" />
+              </div>
+            </div>
+          </div>
+
+          <div id="tab-drawing" class="tab-content">
+            <div class="field">
+              <label for="requirement_text_drawing">Drawing Requirement</label>
+              <textarea id="requirement_text_drawing">Extract the P&ID drawing title from the title block.</textarea>
+            </div>
+            <div class="grid-2">
+              <div class="field">
+                <label for="drawing_target_field">Drawing Target Field</label>
+                <input id="drawing_target_field" value="P&ID drawing title" />
+              </div>
+              <div class="field">
+                <label for="expected_json_key_drawing">JSON Key</label>
+                <input id="expected_json_key_drawing" value="answer" />
+              </div>
+            </div>
+            <div class="check-row">
+              <label class="check-item"><input type="checkbox" id="use_metadata_tag_drawing" checked /> Use @metadataQuery</label>
+            </div>
+            <div class="field">
+              <label for="chunk_count_drawing">Chunk Count</label>
+              <input id="chunk_count_drawing" type="number" value="8" min="1" max="16" />
+            </div>
+          </div>
+
+          <div id="tab-multirow_tabular" class="tab-content">
+            <div class="field">
+              <label for="requirement_text_multirow">Multi-row Requirement</label>
+              <textarea id="requirement_text_multirow">What are the utilities required to run the system?</textarea>
+            </div>
+            <div class="grid-2">
+              <div class="field">
+                <label for="expected_json_key_multirow">JSON Key</label>
+                <input id="expected_json_key_multirow" value="answer" />
+              </div>
+              <div class="field">
+                <label for="chunk_count_multirow">Chunk Count</label>
+                <input id="chunk_count_multirow" type="number" value="8" min="1" max="16" />
+              </div>
+            </div>
+          </div>
+
+          <div id="tab-ai_over_table" class="tab-content">
+            <div class="field">
+              <label for="requirement_text_ai_table">AI Prompt Query</label>
+              <textarea id="requirement_text_ai_table">What are the Tag names mentioned in this document?</textarea>
+            </div>
+            <div class="field">
+              <label for="table_target_instruction">Table Extraction Target</label>
+              <textarea id="table_target_instruction">Find the Signal type of the tag DIAG-FE311.</textarea>
+            </div>
+            <div class="grid-2">
+              <div class="field">
+                <label for="expected_json_key_ai_table">JSON Key</label>
+                <input id="expected_json_key_ai_table" value="answer" />
+              </div>
+              <div class="field">
+                <label for="chunk_count_ai_table">Chunk Count</label>
+                <input id="chunk_count_ai_table" type="number" value="8" min="1" max="16" />
+              </div>
+            </div>
+          </div>
+
+          <div id="tab-table_placeholder" class="tab-content">
+            <div class="grid-2">
+              <div class="field">
+                <label for="column_header">Column Header</label>
+                <input id="column_header" value="Tag Name" />
+              </div>
+              <div class="field">
+                <label for="filter_column">Filter Column</label>
+                <input id="filter_column" value="Signal type" />
+              </div>
+            </div>
+
+            <div class="grid-2">
+              <div class="field">
+                <label for="filter_value">Filter Value</label>
+                <input id="filter_value" value="Analog Input" />
+              </div>
+              <div class="field">
+                <label for="table_header">Table Header</label>
+                <input id="table_header" value="Analog Inputs" />
+              </div>
+            </div>
+
+            <div class="grid-2">
+              <div class="field">
+                <label for="exclude_table_header">Exclude Table Header</label>
+                <input id="exclude_table_header" placeholder="Optional" />
+              </div>
+              <div class="field">
+                <label for="grouping_placeholders_csv">Grouping Placeholders (comma separated)</label>
+                <input id="grouping_placeholders_csv" placeholder='[Analog input tag##],[Analog input io##]' />
+              </div>
+            </div>
+
+            <div class="check-row">
+              <label class="check-item"><input type="checkbox" id="use_wildcard_match" /> Use wildcard match *</label>
+              <label class="check-item"><input type="checkbox" id="use_not_equals" /> Use != operator</label>
+            </div>
+
+            <div class="subpanel">
+              <div class="subpanel-title">Synonym Builder</div>
+              <div id="synonymRows"></div>
+              <button type="button" class="btn btn-secondary btn-small" onclick="addSynonymRow()">+ Add Synonym Row</button>
+              <div class="muted" style="margin-top:10px;">Each row creates one &lt;synonym&gt; entry like "Signal type" | "Signal_type"</div>
+            </div>
+
+            <div class="subpanel">
+              <div class="subpanel-title">Live Filter Preview</div>
+              <div id="liveFilterPreview" class="preview-box"></div>
+            </div>
+
+            <div class="subpanel">
+              <div class="subpanel-title">Live XML Preview</div>
+              <div id="liveXmlPreview" class="preview-box"></div>
+            </div>
+
+            <div class="muted">Chunk count will automatically be set to N/A for true table placeholders.</div>
+          </div>
+
+          <div class="action-row">
+            <button class="btn btn-primary" onclick="generatePrompt()">Generate Prompt</button>
+            <button class="btn btn-secondary" onclick="savePrompt()">Save Prompt</button>
+          </div>
+        </section>
+
+        <section class="panel">
+          <h2>Generated Result</h2>
+
+          <div class="grid-3">
+            <div class="meta-card">
+              <div class="label">Prompt Type</div>
+              <div class="value" id="meta_prompt_type">-</div>
+            </div>
+            <div class="meta-card">
+              <div class="label">Output Key</div>
+              <div class="value" id="meta_output_key">-</div>
+            </div>
+            <div class="meta-card">
+              <div class="label">Chunk Count</div>
+              <div class="value" id="meta_chunk_count">-</div>
+            </div>
+          </div>
+
+          <div class="section-title">Final Prompt Logic</div>
+          <pre id="final_prompt_text"></pre>
+
+          <div class="section-title">AI Prompt</div>
+          <pre id="ai_prompt"></pre>
+
+          <div class="section-title">System Prompt</div>
+          <pre id="system_prompt"></pre>
+
+          <div class="section-title">Table Column Header</div>
+          <pre id="column_header_result"></pre>
+
+          <div class="section-title">Table Filters</div>
+          <pre id="filters_logic_result"></pre>
+
+          <div class="section-title">Table Synonyms</div>
+          <pre id="synonyms_logic_result"></pre>
+
+          <div class="section-title">Grouping Logic</div>
+          <pre id="grouping_logic_result"></pre>
+
+          <div class="section-title">Validation</div>
+          <div id="validation_status" class="status-badge">Not generated</div>
+          <ul id="validation_issues" class="issues"></ul>
+        </section>
+      </div>
+    </main>
+  </div>
+
+  <script src="/static/app.js"></script>
+</body>
+</html>
