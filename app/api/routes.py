@@ -3,7 +3,7 @@ import traceback
 from pathlib import Path
 
 from fastapi import APIRouter, Depends, HTTPException
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, StreamingResponse
 from sqlalchemy.orm import Session
 
 try:
@@ -152,6 +152,81 @@ def apply_grouping(payload: ApplyGroupingRequest, db: Session = Depends(get_db))
     except Exception as e:
         traceback.print_exc()
         return JSONResponse(status_code=500, content={"detail": f"Apply grouping failed: {str(e)}"})
+
+
+@router.get("/export-excel")
+def export_excel(db: Session = Depends(get_db)):
+    """Export all saved prompts in the same format as the source AI Library Excel file."""
+    if not _OPENPYXL:
+        return JSONResponse(status_code=400, content={"detail": "openpyxl not installed"})
+    try:
+        import io, json as _json
+        from openpyxl import Workbook
+        from openpyxl.styles import Font, PatternFill, Alignment
+
+        records = db.query(PromptRecord).order_by(PromptRecord.id).all()
+
+        wb = Workbook()
+        ws = wb.active
+        ws.title = "Global AI Prompts"
+
+        # Same headers as the source Excel
+        headers = ["placeholder", "chunk_count", "ai_prompt", "doctypes", "system_prompt"]
+        ws.append(headers)
+
+        # Style the header row
+        header_fill = PatternFill("solid", fgColor="4D6076")
+        for col_idx, _ in enumerate(headers, 1):
+            cell = ws.cell(1, col_idx)
+            cell.font = Font(bold=True, color="FFFFFF")
+            cell.fill = header_fill
+            cell.alignment = Alignment(wrap_text=False)
+
+        for r in records:
+            # Format doctypes as JSON array string e.g. ["URS","FS"]
+            if r.document_types:
+                doc_list = [d.strip() for d in r.document_types.split(",") if d.strip()]
+                doctypes_str = _json.dumps(doc_list)
+            else:
+                doctypes_str = "[]"
+
+            chunk = r.chunk_count or "N/A"
+
+            if r.prompt_type == "table_placeholder":
+                # For ## rows: collapse final_prompt_text back to literal \n separators
+                ai_col  = (r.final_prompt_text or "").replace("\n", "\\n")
+                sys_col = ""
+            else:
+                ai_col  = r.ai_prompt or ""
+                sys_col = r.system_prompt or ""
+
+            ws.append([r.placeholder_name, chunk, ai_col, doctypes_str, sys_col])
+
+        # Auto-size column A (placeholder names)
+        max_len = max((len(str(ws.cell(row, 1).value or "")) for row in range(1, ws.max_row + 1)), default=10)
+        ws.column_dimensions["A"].width = min(max_len + 4, 60)
+        ws.column_dimensions["B"].width = 12
+        ws.column_dimensions["C"].width = 80
+        ws.column_dimensions["D"].width = 20
+        ws.column_dimensions["E"].width = 80
+
+        # Wrap text in ai_prompt and system_prompt columns
+        for row in ws.iter_rows(min_row=2):
+            for cell in row:
+                cell.alignment = Alignment(wrap_text=True, vertical="top")
+
+        output = io.BytesIO()
+        wb.save(output)
+        output.seek(0)
+
+        return StreamingResponse(
+            output,
+            media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            headers={"Content-Disposition": "attachment; filename=prompt_library_export.xlsx"},
+        )
+    except Exception as e:
+        traceback.print_exc()
+        return JSONResponse(status_code=500, content={"detail": f"Export failed: {str(e)}"})
 
 
 @router.post("/import-excel")

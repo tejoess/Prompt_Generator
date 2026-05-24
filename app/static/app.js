@@ -4,8 +4,9 @@ document.addEventListener("DOMContentLoaded", () => {
   let tabResults = {};  // per-tab last generated result
 
   const editState = {
-    ai_prompt:     { editing: false, past: [], future: [], snapshot: null },
-    system_prompt: { editing: false, past: [], future: [], snapshot: null },
+    ai_prompt:          { editing: false, past: [], future: [], snapshot: null },
+    system_prompt:      { editing: false, past: [], future: [], snapshot: null },
+    final_prompt_text:  { editing: false, past: [], future: [], snapshot: null },
   };
 
   // ── Global Synonyms (localStorage) ───────────────────────────────────────
@@ -99,14 +100,16 @@ document.addEventListener("DOMContentLoaded", () => {
     row.querySelector(".gsyn-word").focus();
   }
 
-  function toggleSynonymsPanel() {
-    const body = document.getElementById("synonymsPanelBody");
-    const arrow = document.getElementById("synonymsPanelArrow");
-    if (!body) return;
-    const open = body.style.display !== "none";
-    body.style.display = open ? "none" : "block";
-    arrow.textContent = open ? "▶" : "▼";
-    if (!open) renderGlobalSynonymsList();
+  function openSynonymsModal() {
+    const modal = document.getElementById("synonymsModal");
+    if (!modal) return;
+    modal.style.display = "flex";
+    renderGlobalSynonymsList();
+  }
+
+  function closeSynonymsModal() {
+    const modal = document.getElementById("synonymsModal");
+    if (modal) modal.style.display = "none";
   }
 
   // ── Tab management ────────────────────────────────────────────────────────
@@ -197,8 +200,8 @@ document.addEventListener("DOMContentLoaded", () => {
       issuesEl.appendChild(li);
     });
 
-    // Reset edit state — called on new generate, just turn off editing mode
-    ["ai_prompt", "system_prompt"].forEach(field => {
+    // Reset edit state for all editable fields
+    ["ai_prompt", "system_prompt", "final_prompt_text"].forEach(field => {
       const pre = document.getElementById(field);
       if (pre) pre.contentEditable = "false";
       _showEditButtons(field, false);
@@ -220,6 +223,19 @@ document.addEventListener("DOMContentLoaded", () => {
       data.final_prompt_text = `${ai}\n\n${sys}`;
       document.getElementById("final_prompt_text").textContent = data.final_prompt_text;
     }
+  }
+
+  // When final_prompt_text is edited directly, sync changes down to AI/System prompt displays
+  function syncFromFinalPromptText(text) {
+    const data = tabResults[activeTab];
+    if (!data || data.prompt_type === TABLE_TAB) return;
+    const aiMatch  = text.match(/<ai_prompt>[\s\S]*?<\/ai_prompt>/);
+    const sysMatch = text.match(/<system_prompt>[\s\S]*?<\/system_prompt>/);
+    const aiPre  = document.getElementById("ai_prompt");
+    const sysPre = document.getElementById("system_prompt");
+    if (aiMatch  && aiPre)  { aiPre.textContent  = aiMatch[0];  data.ai_prompt     = aiMatch[0]; }
+    if (sysMatch && sysPre) { sysPre.textContent = sysMatch[0]; data.system_prompt = sysMatch[0]; }
+    data.final_prompt_text = text;
   }
 
   // ── Edit / Undo / Redo (contenteditable on <pre>) ────────────────────────
@@ -266,7 +282,11 @@ document.addEventListener("DOMContentLoaded", () => {
     _showEditButtons(field, false);
     state.editing  = false;
     state.snapshot = null;
-    rebuildFinalPromptText();
+    if (field === "final_prompt_text") {
+      syncFromFinalPromptText(newVal);
+    } else {
+      rebuildFinalPromptText();
+    }
   }
 
   function cancelEdit(field) {
@@ -289,7 +309,8 @@ document.addEventListener("DOMContentLoaded", () => {
     const pre = document.getElementById(field);
     state.future.push(pre.textContent);
     pre.textContent = state.past.pop();
-    rebuildFinalPromptText();
+    if (field === "final_prompt_text") syncFromFinalPromptText(pre.textContent);
+    else rebuildFinalPromptText();
   }
 
   function redoPrompt(field) {
@@ -298,7 +319,8 @@ document.addEventListener("DOMContentLoaded", () => {
     const pre = document.getElementById(field);
     state.past.push(pre.textContent);
     pre.textContent = state.future.pop();
-    rebuildFinalPromptText();
+    if (field === "final_prompt_text") syncFromFinalPromptText(pre.textContent);
+    else rebuildFinalPromptText();
   }
 
   // ── Table Synonym Rows ────────────────────────────────────────────────────
@@ -640,10 +662,30 @@ document.addEventListener("DOMContentLoaded", () => {
       detailsDiv.className = "ph-details";
       detailsDiv.style.cssText = "display:none;margin-top:8px;padding-top:8px;border-top:1px solid var(--border-soft);width:100%";
       const promptText = record.final_prompt_text || "";
-      detailsDiv.innerHTML = `
-        <pre style="margin:0;font-size:12px;max-height:200px;overflow:auto;background:#f7f9fb;border:1px solid var(--border-soft);border-radius:8px;padding:10px">${_esc(promptText)}</pre>
-        <button type="button" class="btn btn-secondary btn-small" style="margin-top:6px" onclick="navigator.clipboard.writeText(${JSON.stringify(promptText)}).then(()=>this.textContent='Copied!').catch(()=>alert('Copy failed'))">Copy Prompt</button>
-      `;
+
+      // Build pre element safely (no innerHTML with user data)
+      const promptPre = document.createElement("pre");
+      promptPre.style.cssText = "margin:0;font-size:12px;max-height:200px;overflow:auto;background:#f7f9fb;border:1px solid var(--border-soft);border-radius:8px;padding:10px";
+      promptPre.textContent = promptText;
+
+      // Build copy button with closure — no inline onclick with embedded data
+      const copyBtn = document.createElement("button");
+      copyBtn.type = "button";
+      copyBtn.className = "btn btn-secondary btn-small";
+      copyBtn.style.marginTop = "6px";
+      copyBtn.textContent = "Copy Prompt";
+      copyBtn.addEventListener("click", e => {
+        e.stopPropagation();
+        navigator.clipboard.writeText(promptText)
+          .then(() => {
+            copyBtn.textContent = "✔ Copied!";
+            setTimeout(() => { copyBtn.textContent = "Copy Prompt"; }, 2000);
+          })
+          .catch(() => alert("Copy failed — try a browser that supports clipboard API"));
+      });
+
+      detailsDiv.appendChild(promptPre);
+      detailsDiv.appendChild(copyBtn);
 
       const viewBtn = document.createElement("button");
       viewBtn.type = "button";
@@ -757,7 +799,8 @@ document.addEventListener("DOMContentLoaded", () => {
   window.savePrompt                 = savePrompt;
   window.addSynonymRow              = addSynonymRow;
   window.addGlobalSynonymRow        = addGlobalSynonymRow;
-  window.toggleSynonymsPanel        = toggleSynonymsPanel;
+  window.openSynonymsModal          = openSynonymsModal;
+  window.closeSynonymsModal         = closeSynonymsModal;
   window.enterEditPrompt            = enterEditPrompt;
   window.savePromptEdit             = savePromptEdit;
   window.cancelEdit                 = cancelEdit;
