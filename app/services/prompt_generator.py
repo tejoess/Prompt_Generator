@@ -33,6 +33,8 @@ def generate_standard_prompt(payload) -> Dict:
         output_key=payload.expected_json_key or "answer",
         include_table_line=("table" in ai_text.lower()),
         include_drawing_rules=False,
+        hint_note=getattr(payload, "hint_note", None),
+        global_synonyms=getattr(payload, "global_synonyms", None),
     )
     system_prompt = wrap_system_prompt(system_text)
 
@@ -108,6 +110,8 @@ def generate_ai_over_table_prompt(payload) -> Dict:
         output_key=payload.expected_json_key or "answer",
         include_table_line=True,
         include_drawing_rules=False,
+        hint_note=getattr(payload, "hint_note", None),
+        global_synonyms=getattr(payload, "global_synonyms", None),
     )
     system_prompt = wrap_system_prompt(system_text)
 
@@ -143,6 +147,8 @@ def generate_metadata_prompt(payload) -> Dict:
         output_key=payload.expected_json_key or "answer",
         include_table_line=False,
         include_drawing_rules=False,
+        hint_note=getattr(payload, "hint_note", None),
+        global_synonyms=getattr(payload, "global_synonyms", None),
     )
     system_prompt = wrap_system_prompt(system_text)
 
@@ -178,6 +184,8 @@ def generate_section_number_prompt(payload) -> Dict:
         output_key=payload.expected_json_key or "answer",
         include_table_line=False,
         include_drawing_rules=False,
+        hint_note=getattr(payload, "hint_note", None),
+        global_synonyms=getattr(payload, "global_synonyms", None),
     )
     system_prompt = wrap_system_prompt(system_text)
 
@@ -203,26 +211,25 @@ def generate_section_number_prompt(payload) -> Dict:
 
 def generate_drawing_prompt(payload) -> Dict:
     doc_types = normalize_doc_types(payload.document_types)
-    special_tags: List[str] = []
-
-    if payload.use_metadata_tag:
-        special_tags.append("@metadataQuery")
+    # @metadataQuery is always required for drawing/P&ID prompts
+    special_tags: List[str] = ["@metadataQuery"]
 
     req_text = (payload.requirement_text or "").strip()
-    ai_text = req_text
-    if special_tags:
-        ai_text = " ".join(special_tags) + " " + ai_text
+    ai_text = "@metadataQuery " + req_text
 
     ai_prompt = wrap_ai_prompt(ai_text)
 
     target = (payload.drawing_target_field or payload.requirement_text or "").strip()
 
     system_text = build_standard_system_prompt(
-        expertise_line="You are an expert in interpreting structured and unstructured engineering drawings, P&IDs, and technical documents.",
-        target_line=f"Locate the exact readable drawing-related text requested. Extraction target: {target}",
+        expertise_line="",  # overridden by PID template
+        target_line=f"Locate the exact readable text for this drawing/P&ID field. Extraction target: {target}",
         output_key=payload.expected_json_key or "answer",
         include_table_line=False,
-        include_drawing_rules=True,
+        include_drawing_rules=False,
+        use_pid_template=True,
+        hint_note=getattr(payload, "hint_note", None),
+        global_synonyms=getattr(payload, "global_synonyms", None),
     )
     system_prompt = wrap_system_prompt(system_text)
 
@@ -260,6 +267,8 @@ def generate_multirow_tabular_prompt(payload) -> Dict:
         output_key=output_key,
         include_table_line=("table" in req_text.lower()),
         include_drawing_rules=False,
+        hint_note=getattr(payload, "hint_note", None),
+        global_synonyms=getattr(payload, "global_synonyms", None),
     )
     system_prompt = wrap_system_prompt(system_text)
 

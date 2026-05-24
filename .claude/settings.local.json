@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(.venv\\\\Scripts\\\\python.exe -c \"from app.main import app; from app.api.routes import router; from app.services.prompt_generator import generate_prompts; from app.services.prompt_rules import build_standard_system_prompt; print\\('All imports OK'\\)\")",
+      "Bash(.venv/Scripts/python.exe -c \"import sqlite3; conn=sqlite3.connect\\('data/prompts.db'\\); cur=conn.cursor\\(\\); cur.execute\\('PRAGMA table_info\\(prompts\\)'\\); [print\\(c\\) for c in cur.fetchall\\(\\)]; conn.close\\(\\)\")",
+      "Bash(.venv/Scripts/python.exe -c ' *)",
+      "Bash(.venv/Scripts/python.exe -c \"import sqlite3; conn=sqlite3.connect\\('data/prompts.db'\\); cur=conn.cursor\\(\\); cur.execute\\('PRAGMA table_info\\(prompts\\)'\\); [print\\(c[1], c[2]\\) for c in cur.fetchall\\(\\)]; conn.close\\(\\)\")"
+    ]
+  }
+}

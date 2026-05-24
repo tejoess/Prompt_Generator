@@ -92,17 +92,8 @@
       margin-bottom: 22px;
     }
 
-    .page-title {
-      margin: 0;
-      font-size: 26px;
-      font-weight: 700;
-    }
-
-    .page-subtitle {
-      margin: 6px 0 0;
-      color: var(--text-muted);
-      font-size: 14px;
-    }
+    .page-title { margin: 0; font-size: 26px; font-weight: 700; }
+    .page-subtitle { margin: 6px 0 0; color: var(--text-muted); font-size: 14px; }
 
     .btn {
       border: none;
@@ -114,32 +105,26 @@
       transition: 0.2s ease;
     }
 
-    .btn-primary {
-      background: var(--green);
-      color: white;
-    }
-
+    .btn-primary { background: var(--green); color: white; }
     .btn-primary:hover { background: var(--green-hover); }
-
-    .btn-secondary {
-      background: white;
-      color: var(--text-main);
-      border: 1px solid var(--border);
-    }
-
+    .btn-secondary { background: white; color: var(--text-main); border: 1px solid var(--border); }
     .btn-secondary:hover { background: #f4f7f9; }
+    .btn-small { padding: 8px 12px; font-size: 13px; border-radius: 8px; }
+    .btn-danger { background: #fff1f1; color: #cb4e4e; border: 1px solid #f3c8c8; }
 
-    .btn-small {
-      padding: 8px 12px;
+    .btn-icon {
+      background: none;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 3px 7px;
       font-size: 13px;
-      border-radius: 8px;
+      cursor: pointer;
+      color: var(--text-muted);
+      line-height: 1;
+      transition: 0.15s;
     }
-
-    .btn-danger {
-      background: #fff1f1;
-      color: #cb4e4e;
-      border: 1px solid #f3c8c8;
-    }
+    .btn-icon:hover { background: #f0f4f8; color: var(--text-main); }
+    .btn-icon.active { background: var(--green-soft); border-color: #ccefd8; color: #24914b; }
 
     .panel {
       background: var(--bg-panel);
@@ -150,10 +135,17 @@
       margin-bottom: 20px;
     }
 
-    .panel h2 {
-      margin: 0 0 16px;
-      font-size: 18px;
+    .panel h2 { margin: 0 0 16px; font-size: 18px; }
+
+    .panel-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      cursor: pointer;
+      user-select: none;
     }
+
+    .panel-header h2 { margin: 0; }
 
     .tabs {
       display: flex;
@@ -181,29 +173,11 @@
     .tab-content { display: none; }
     .tab-content.active { display: block; }
 
-    .grid-2 {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 18px;
-    }
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+    .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
 
-    .grid-3 {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 14px;
-    }
-
-    .field {
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-      margin-bottom: 16px;
-    }
-
-    .field label {
-      font-size: 13px;
-      font-weight: 700;
-    }
+    .field { display: flex; flex-direction: column; gap: 8px; margin-bottom: 16px; }
+    .field label { font-size: 13px; font-weight: 700; }
 
     input, textarea, select {
       width: 100%;
@@ -216,39 +190,18 @@
       outline: none;
     }
 
-    textarea {
-      min-height: 110px;
-      resize: vertical;
-    }
+    textarea { min-height: 110px; resize: vertical; }
+    textarea.hint-textarea { min-height: 60px; }
 
-    .check-row {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 12px;
-      margin-bottom: 16px;
-    }
-
+    .check-row { display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 16px; }
     .check-item {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      padding: 10px 12px;
-      background: #fbfcfd;
-      border: 1px solid var(--border-soft);
-      border-radius: 10px;
+      display: flex; align-items: center; gap: 10px;
+      padding: 10px 12px; background: #fbfcfd;
+      border: 1px solid var(--border-soft); border-radius: 10px;
     }
+    .check-item input { width: auto; margin: 0; }
 
-    .check-item input {
-      width: auto;
-      margin: 0;
-    }
-
-    .action-row {
-      display: flex;
-      gap: 12px;
-      flex-wrap: wrap;
-      margin-top: 10px;
-    }
+    .action-row { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 10px; }
 
     .meta-card {
       background: #fbfcfd;
@@ -256,25 +209,19 @@
       border-radius: 12px;
       padding: 14px;
     }
+    .meta-card .label { font-size: 12px; color: var(--text-muted); margin-bottom: 6px; text-transform: uppercase; }
+    .meta-card .value { font-size: 15px; font-weight: 700; word-break: break-word; }
 
-    .meta-card .label {
-      font-size: 12px;
-      color: var(--text-muted);
-      margin-bottom: 6px;
-      text-transform: uppercase;
-    }
-
-    .meta-card .value {
-      font-size: 15px;
-      font-weight: 700;
-      word-break: break-word;
-    }
-
-    .section-title {
+    .section-title-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
       margin: 18px 0 10px;
       font-size: 15px;
       font-weight: 700;
     }
+
+    .section-title { margin: 18px 0 10px; font-size: 15px; font-weight: 700; }
 
     .subpanel {
       border: 1px solid var(--border-soft);
@@ -283,19 +230,9 @@
       background: #fbfcfd;
       margin-bottom: 14px;
     }
+    .subpanel-title { font-size: 14px; font-weight: 700; margin-bottom: 10px; }
 
-    .subpanel-title {
-      font-size: 14px;
-      font-weight: 700;
-      margin-bottom: 10px;
-    }
-
-    .row-inline {
-      display: flex;
-      gap: 10px;
-      align-items: center;
-      flex-wrap: wrap;
-    }
+    .row-inline { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
 
     .synonym-row,
     .group-row {
@@ -304,6 +241,16 @@
       gap: 10px;
       margin-bottom: 10px;
     }
+
+    .global-syn-row {
+      display: grid;
+      grid-template-columns: 1fr 2fr auto;
+      gap: 10px;
+      margin-bottom: 8px;
+      align-items: center;
+    }
+
+    .global-syn-row input { margin: 0; }
 
     .preview-box {
       background: #f7f9fb;
@@ -331,6 +278,14 @@
       overflow: auto;
     }
 
+    pre[contenteditable="true"] {
+      background: #fffef0;
+      border: 2px solid #d4b800;
+      cursor: text;
+      outline: none;
+      max-height: none;
+    }
+
     .status-badge {
       display: inline-block;
       padding: 8px 12px;
@@ -342,26 +297,45 @@
       border: 1px solid #ccefd8;
     }
 
-    .status-badge.invalid {
-      background: #fff1f1;
-      color: #cb4e4e;
-      border-color: #f3c8c8;
-    }
+    .status-badge.invalid { background: #fff1f1; color: #cb4e4e; border-color: #f3c8c8; }
 
-    .issues {
-      margin: 12px 0 0;
-      padding-left: 18px;
-      color: #b84f4f;
-    }
+    .issues { margin: 12px 0 0; padding-left: 18px; color: #b84f4f; }
+    .muted { color: var(--text-muted); font-size: 13px; }
 
-    .muted {
-      color: var(--text-muted);
-      font-size: 13px;
+    /* Grouping tab */
+    .ph-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 14px;
+      border: 1px solid var(--border-soft);
+      border-radius: 10px;
+      margin-bottom: 8px;
+      background: #fbfcfd;
+      cursor: pointer;
+      transition: 0.15s;
+    }
+    .ph-item:hover { background: #f0f8f4; border-color: #ccefd8; }
+    .ph-item.selected { background: var(--green-soft); border-color: #ccefd8; }
+    .ph-item input[type=checkbox] { width: auto; margin: 0; }
+    .ph-name { font-weight: 600; font-size: 14px; }
+    .ph-meta { font-size: 12px; color: var(--text-muted); }
+    .ph-grouped { font-size: 11px; color: #24914b; background: var(--green-soft); padding: 2px 8px; border-radius: 999px; }
+
+    .search-bar {
+      width: 100%;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      background: white;
+      padding: 10px 14px;
+      font-size: 14px;
+      outline: none;
+      margin-bottom: 14px;
     }
 
     @media (max-width: 1100px) {
       .app-shell { grid-template-columns: 1fr; }
-      .grid-2, .grid-3, .synonym-row, .group-row { grid-template-columns: 1fr; }
+      .grid-2, .grid-3, .synonym-row, .group-row, .global-syn-row { grid-template-columns: 1fr; }
       .topbar { flex-direction: column; align-items: flex-start; }
     }
   </style>
@@ -388,6 +362,20 @@
           <button class="btn btn-secondary" onclick="location.reload()">Refresh</button>
         </div>
 
+        <!-- Global Synonyms Dictionary -->
+        <section class="panel">
+          <div class="panel-header" onclick="toggleSynonymsPanel()">
+            <h2 style="margin:0">Global Synonyms Dictionary</h2>
+            <span id="synonymsPanelArrow" style="font-size:18px; color:var(--text-muted)">▶</span>
+          </div>
+          <div id="synonymsPanelBody" style="display:none; margin-top:16px">
+            <p class="muted" style="margin:0 0 12px">These synonyms are injected into every system prompt where the word appears. Stored locally in your browser.</p>
+            <div id="globalSynonymsList"></div>
+            <button type="button" class="btn btn-secondary btn-small" onclick="addGlobalSynonymRow()">+ Add Word</button>
+          </div>
+        </section>
+
+        <!-- Prompt Type Tabs -->
         <section class="panel">
           <h2>Prompt Type</h2>
           <div class="tabs">
@@ -395,14 +383,16 @@
             <button class="tab-btn" data-tab="title">Title</button>
             <button class="tab-btn" data-tab="metadata">Metadata</button>
             <button class="tab-btn" data-tab="section_number">Section Number</button>
-            <button class="tab-btn" data-tab="drawing">Drawing / P&ID</button>
+            <button class="tab-btn" data-tab="drawing">Drawing / P&amp;ID</button>
             <button class="tab-btn" data-tab="multirow_tabular">Multi-row @tabular</button>
             <button class="tab-btn" data-tab="ai_over_table">AI-over-Table</button>
             <button class="tab-btn" data-tab="table_placeholder">Table Placeholder ##</button>
+            <button class="tab-btn" data-tab="grouping">Grouping</button>
           </div>
         </section>
 
-        <section class="panel">
+        <!-- Prompt Input Panel (hidden for grouping tab) -->
+        <section class="panel" id="promptInputPanel">
           <h2>Prompt Input</h2>
 
           <div class="field">
@@ -415,6 +405,7 @@
             <input id="document_types" value="URS,FS" />
           </div>
 
+          <!-- Standard -->
           <div id="tab-standard" class="tab-content active">
             <div class="field">
               <label for="requirement_text_standard">Requirement Text</label>
@@ -431,27 +422,27 @@
               </div>
             </div>
           </div>
-          
-          <div id="tab-title" class="tab-content">
-           <div class="field">
-            <label>Title Extraction Prompt</label>
-            <textarea id="requirement_text_title">Extract the title of the document</textarea>
-           </div>
-           <div class="grid-2">
-            <div class="field">
-             <label>JSON Output Key</label>
-             <input id="expected_json_key_title" value="title">
-            </div>
-            <div class="field">
-             <label>Chunk Count</label>
-             <input id="chunk_count_title" type="number" value="3" min="1" max="8">
-            </div>
-           </div>
-            <div class="muted">
-              Title prompts automatically analyze the first pages of the document.
-            </div>
-           </div>          
 
+          <!-- Title -->
+          <div id="tab-title" class="tab-content">
+            <div class="field">
+              <label>Title Extraction Prompt</label>
+              <textarea id="requirement_text_title">Extract the title of the document</textarea>
+            </div>
+            <div class="grid-2">
+              <div class="field">
+                <label>JSON Output Key</label>
+                <input id="expected_json_key_title" value="title">
+              </div>
+              <div class="field">
+                <label>Chunk Count</label>
+                <input id="chunk_count_title" type="number" value="3" min="1" max="8">
+              </div>
+            </div>
+            <div class="muted">Title prompts automatically analyze the first pages of the document.</div>
+          </div>
+
+          <!-- Metadata -->
           <div id="tab-metadata" class="tab-content">
             <div class="field">
               <label for="requirement_text_metadata">Metadata Requirement</label>
@@ -469,6 +460,7 @@
             </div>
           </div>
 
+          <!-- Section Number -->
           <div id="tab-section_number" class="tab-content">
             <div class="field">
               <label for="requirement_text_section">Section Number Requirement</label>
@@ -486,30 +478,30 @@
             </div>
           </div>
 
+          <!-- Drawing / P&ID -->
           <div id="tab-drawing" class="tab-content">
             <div class="field">
               <label for="requirement_text_drawing">Drawing Requirement</label>
-              <textarea id="requirement_text_drawing">Extract the P&ID drawing title from the title block.</textarea>
+              <textarea id="requirement_text_drawing">Extract the P&amp;ID drawing title from the title block.</textarea>
             </div>
             <div class="grid-2">
               <div class="field">
                 <label for="drawing_target_field">Drawing Target Field</label>
-                <input id="drawing_target_field" value="P&ID drawing title" />
+                <input id="drawing_target_field" value="P&amp;ID drawing title" />
               </div>
               <div class="field">
                 <label for="expected_json_key_drawing">JSON Key</label>
                 <input id="expected_json_key_drawing" value="answer" />
               </div>
             </div>
-            <div class="check-row">
-              <label class="check-item"><input type="checkbox" id="use_metadata_tag_drawing" checked /> Use @metadataQuery</label>
-            </div>
             <div class="field">
               <label for="chunk_count_drawing">Chunk Count</label>
               <input id="chunk_count_drawing" type="number" value="8" min="1" max="16" />
             </div>
+            <div class="muted">@metadataQuery is always applied for Drawing / P&amp;ID prompts.</div>
           </div>
 
+          <!-- Multi-row Tabular -->
           <div id="tab-multirow_tabular" class="tab-content">
             <div class="field">
               <label for="requirement_text_multirow">Multi-row Requirement</label>
@@ -527,6 +519,7 @@
             </div>
           </div>
 
+          <!-- AI-over-Table -->
           <div id="tab-ai_over_table" class="tab-content">
             <div class="field">
               <label for="requirement_text_ai_table">AI Prompt Query</label>
@@ -548,6 +541,7 @@
             </div>
           </div>
 
+          <!-- Table Placeholder ## -->
           <div id="tab-table_placeholder" class="tab-content">
             <div class="grid-2">
               <div class="field">
@@ -559,7 +553,6 @@
                 <input id="filter_column" value="Signal type" />
               </div>
             </div>
-
             <div class="grid-2">
               <div class="field">
                 <label for="filter_value">Filter Value</label>
@@ -570,7 +563,6 @@
                 <input id="table_header" value="Analog Inputs" />
               </div>
             </div>
-
             <div class="grid-2">
               <div class="field">
                 <label for="exclude_table_header">Exclude Table Header</label>
@@ -581,39 +573,47 @@
                 <input id="grouping_placeholders_csv" placeholder='[Analog input tag##],[Analog input io##]' />
               </div>
             </div>
-
             <div class="check-row">
               <label class="check-item"><input type="checkbox" id="use_wildcard_match" /> Use wildcard match *</label>
               <label class="check-item"><input type="checkbox" id="use_not_equals" /> Use != operator</label>
             </div>
-
             <div class="subpanel">
               <div class="subpanel-title">Synonym Builder</div>
               <div id="synonymRows"></div>
               <button type="button" class="btn btn-secondary btn-small" onclick="addSynonymRow()">+ Add Synonym Row</button>
               <div class="muted" style="margin-top:10px;">Each row creates one &lt;synonym&gt; entry like "Signal type" | "Signal_type"</div>
             </div>
-
             <div class="subpanel">
               <div class="subpanel-title">Live Filter Preview</div>
               <div id="liveFilterPreview" class="preview-box"></div>
             </div>
-
             <div class="subpanel">
               <div class="subpanel-title">Live XML Preview</div>
               <div id="liveXmlPreview" class="preview-box"></div>
             </div>
-
             <div class="muted">Chunk count will automatically be set to N/A for true table placeholders.</div>
           </div>
 
-          <div class="action-row">
+          <!-- Hint / Note (shown for all non-table, non-grouping tabs) -->
+          <div id="hint_note_section" class="field" style="display:none; margin-top:4px">
+            <label for="hint_note">Hint / Note <span class="muted" style="font-weight:400">(runtime only — added to system prompt)</span></label>
+            <textarea id="hint_note" class="hint-textarea" placeholder="Any specific detail, constraint, or edge case that must be considered in the system prompt..."></textarea>
+          </div>
+
+          <div class="action-row" id="generateSaveRow">
             <button class="btn btn-primary" onclick="generatePrompt()">Generate Prompt</button>
             <button class="btn btn-secondary" onclick="savePrompt()">Save Prompt</button>
           </div>
         </section>
 
-        <section class="panel">
+        <!-- Grouping Panel — standalone, outside promptInputPanel -->
+        <section class="panel" id="groupingPanel" style="display:none">
+          <h2>Grouping <span class="muted" style="font-size:13px;font-weight:400">— select 2+ saved ## placeholders to group them</span></h2>
+          <div id="groupingContent"><p class="muted">Loading…</p></div>
+        </section>
+
+        <!-- Generated Result -->
+        <section class="panel" id="resultPanel">
           <h2>Generated Result</h2>
 
           <div class="grid-3">
@@ -634,23 +634,46 @@
           <div class="section-title">Final Prompt Logic</div>
           <pre id="final_prompt_text"></pre>
 
-          <div class="section-title">AI Prompt</div>
-          <pre id="ai_prompt"></pre>
+          <!-- AI prompt (non-table only) -->
+          <div id="ai_prompt_section">
+            <div class="section-title-row">
+              AI Prompt
+              <button class="btn btn-secondary btn-small" id="edit_ai_prompt_btn" onclick="enterEditPrompt('ai_prompt')">✏ Edit</button>
+              <button class="btn btn-primary btn-small" id="save_ai_prompt_btn" onclick="savePromptEdit('ai_prompt')" style="display:none">✔ Save</button>
+              <button class="btn btn-danger btn-small" id="cancel_ai_prompt_btn" onclick="cancelEdit('ai_prompt')" style="display:none">✕ Cancel</button>
+              <button class="btn btn-secondary btn-small" onclick="undoPrompt('ai_prompt')">↩ Undo</button>
+              <button class="btn btn-secondary btn-small" onclick="redoPrompt('ai_prompt')">↪ Redo</button>
+            </div>
+            <pre id="ai_prompt" style="outline:none"></pre>
+          </div>
 
-          <div class="section-title">System Prompt</div>
-          <pre id="system_prompt"></pre>
+          <!-- System prompt (non-table only) -->
+          <div id="system_prompt_section">
+            <div class="section-title-row">
+              System Prompt
+              <button class="btn btn-secondary btn-small" id="edit_system_prompt_btn" onclick="enterEditPrompt('system_prompt')">✏ Edit</button>
+              <button class="btn btn-primary btn-small" id="save_system_prompt_btn" onclick="savePromptEdit('system_prompt')" style="display:none">✔ Save</button>
+              <button class="btn btn-danger btn-small" id="cancel_system_prompt_btn" onclick="cancelEdit('system_prompt')" style="display:none">✕ Cancel</button>
+              <button class="btn btn-secondary btn-small" onclick="undoPrompt('system_prompt')">↩ Undo</button>
+              <button class="btn btn-secondary btn-small" onclick="redoPrompt('system_prompt')">↪ Redo</button>
+            </div>
+            <pre id="system_prompt" style="outline:none"></pre>
+          </div>
 
-          <div class="section-title">Table Column Header</div>
-          <pre id="column_header_result"></pre>
+          <!-- Table-only fields -->
+          <div id="table_result_sections" style="display:none">
+            <div class="section-title">Table Column Header</div>
+            <pre id="column_header_result"></pre>
 
-          <div class="section-title">Table Filters</div>
-          <pre id="filters_logic_result"></pre>
+            <div class="section-title">Table Filters</div>
+            <pre id="filters_logic_result"></pre>
 
-          <div class="section-title">Table Synonyms</div>
-          <pre id="synonyms_logic_result"></pre>
+            <div class="section-title">Table Synonyms</div>
+            <pre id="synonyms_logic_result"></pre>
 
-          <div class="section-title">Grouping Logic</div>
-          <pre id="grouping_logic_result"></pre>
+            <div class="section-title">Grouping Logic</div>
+            <pre id="grouping_logic_result"></pre>
+          </div>
 
           <div class="section-title">Validation</div>
           <div id="validation_status" class="status-badge">Not generated</div>
@@ -660,6 +683,6 @@
     </main>
   </div>
 
-  <script src="/static/app.js"></script>
+  <script src="/static/app.js?v=6"></script>
 </body>
 </html>

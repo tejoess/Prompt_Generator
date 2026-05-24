@@ -1,7 +1,16 @@
+import re
+import traceback
+from pathlib import Path
+
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
-import traceback
+
+try:
+    from openpyxl import load_workbook as _load_workbook
+    _OPENPYXL = True
+except ImportError:
+    _OPENPYXL = False
 
 from app.database import get_db
 from app.models import PromptRecord
@@ -9,6 +18,7 @@ from app.schemas import (
     GeneratePromptRequest,
     SavePromptRequest,
     PromptRecordResponse,
+    ApplyGroupingRequest,
 )
 from app.services.prompt_generator import generate_prompts
 from app.services.prompt_validator import validate_generated_prompt
@@ -96,7 +106,191 @@ def list_prompts(db: Session = Depends(get_db)):
 
     except Exception as e:
         traceback.print_exc()
-        raise HTTPException(
-            status_code=500,
-            detail=f"Fetch failed: {str(e)}"
+        raise HTTPException(status_code=500, detail=f"Fetch failed: {str(e)}")
+
+
+@router.get("/prompts/table-placeholders", response_model=list[PromptRecordResponse])
+def list_table_placeholders(db: Session = Depends(get_db)):
+    try:
+        return (
+            db.query(PromptRecord)
+            .filter(PromptRecord.placeholder_name.like("%##%"))
+            .order_by(PromptRecord.placeholder_name)
+            .all()
         )
+    except Exception as e:
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=f"Fetch failed: {str(e)}")
+
+
+@router.post("/prompts/apply-grouping")
+def apply_grouping(payload: ApplyGroupingRequest, db: Session = Depends(get_db)):
+    try:
+        records = db.query(PromptRecord).filter(PromptRecord.id.in_(payload.placeholder_ids)).all()
+        if not records:
+            raise HTTPException(status_code=404, detail="No records found for given IDs")
+
+        names = [r.placeholder_name for r in records]
+        grouping_logic = "@grouping=[" + ",".join(f'"{n}"' for n in names) + "]"
+
+        for record in records:
+            record.grouping_logic = grouping_logic
+            parts = [grouping_logic]
+            if record.column_header:
+                parts.append(record.column_header)
+            if record.filters_logic:
+                parts.append(record.filters_logic)
+            if record.synonyms_logic:
+                parts.append(record.synonyms_logic)
+            record.final_prompt_text = "\n".join(parts)
+
+        db.commit()
+        return {"message": f"Grouping applied to {len(records)} record(s)", "grouping_logic": grouping_logic}
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        traceback.print_exc()
+        return JSONResponse(status_code=500, content={"detail": f"Apply grouping failed: {str(e)}"})
+
+
+@router.post("/import-excel")
+def import_excel(db: Session = Depends(get_db)):
+    """Import ## table-placeholder rows from the Excel data file into the DB."""
+    if not _OPENPYXL:
+        return JSONResponse(status_code=400, content={"detail": "openpyxl is not installed. Run: pip install openpyxl"})
+
+    excel_path = Path(__file__).parent.parent.parent / "data" / "AI_Prompt_Library_2026-05-06.xlsx"
+    if not excel_path.exists():
+        return JSONResponse(status_code=404, content={"detail": f"Excel file not found: {excel_path}"})
+
+    try:
+        import json as _json
+
+        wb = _load_workbook(excel_path)
+        ws = wb["Global AI Prompts"]
+
+        imported = 0
+        skipped = 0
+
+        for row in ws.iter_rows(min_row=2, values_only=True):
+            placeholder = str(row[0] or "").strip()
+            if not placeholder or "##" not in placeholder:
+                continue
+
+            # Skip duplicates
+            if db.query(PromptRecord).filter(PromptRecord.placeholder_name == placeholder).first():
+                skipped += 1
+                continue
+
+            chunk_count = str(row[1] or "N/A").strip()
+            raw_text    = str(row[2] or "").strip()
+            doctypes_raw = str(row[3] or "").strip()
+
+            # Parse document types (may be JSON array string like '["IO List"]')
+            try:
+                doc_list = _json.loads(doctypes_raw)
+                doc_types_str = ",".join(doc_list) if isinstance(doc_list, list) else doctypes_raw
+            except Exception:
+                doc_types_str = doctypes_raw
+
+            # Replace literal \n separators with real newlines
+            text = raw_text.replace("\\n", "\n")
+
+            # Extract @grouping=[...] – greedy to handle inner brackets in placeholder names
+            grouping_logic = None
+            m = re.search(r'@grouping=\[.*"\]', text, re.DOTALL)
+            if m:
+                raw_grouping = m.group(0)
+                # Excel uses real newlines between quoted names; normalise to commas
+                grouping_logic = re.sub(r'"\s+"', '","', raw_grouping)
+
+            # Extract <column_header>...</column_header>
+            column_header = None
+            m = re.search(r'<column_header>.*?</column_header>', text, re.DOTALL)
+            if m:
+                column_header = m.group(0)
+
+            # Extract <filters>...</filters>
+            filters_logic = None
+            m = re.search(r'<filters>.*?</filters>', text, re.DOTALL)
+            if m:
+                filters_logic = m.group(0)
+
+            # Extract <synonyms>...</synonyms>
+            synonyms_logic = None
+            m = re.search(r'<synonyms>.*?</synonyms>', text, re.DOTALL)
+            if m:
+                synonyms_logic = m.group(0)
+
+            # Rebuild canonical final_prompt_text
+            parts = []
+            if grouping_logic:
+                parts.append(grouping_logic)
+            if column_header:
+                parts.append(column_header)
+            if filters_logic:
+                parts.append(filters_logic)
+            if synonyms_logic:
+                parts.append(synonyms_logic)
+            final_prompt_text = "\n".join(parts)
+
+            record = PromptRecord(
+                placeholder_name=placeholder,
+                prompt_type="table_placeholder",
+                requirement_text=None,
+                extraction_family="table_placeholder",
+                output_key=None,
+                special_tags="@grouping" if grouping_logic else "",
+                document_types=doc_types_str,
+                chunk_count=chunk_count,
+                ai_prompt=None,
+                system_prompt=None,
+                column_header=column_header,
+                filters_logic=filters_logic,
+                synonyms_logic=synonyms_logic,
+                grouping_logic=grouping_logic,
+                final_prompt_text=final_prompt_text,
+                validation_status="valid",
+                validation_issues=None,
+            )
+            db.add(record)
+            imported += 1
+
+        db.commit()
+        return {
+            "message": f"Import complete: {imported} imported, {skipped} already existed",
+            "imported": imported,
+            "skipped": skipped,
+        }
+
+    except Exception as e:
+        traceback.print_exc()
+        return JSONResponse(status_code=500, content={"detail": f"Import failed: {str(e)}"})
+
+
+@router.delete("/prompts/{record_id}/grouping")
+def remove_grouping(record_id: int, db: Session = Depends(get_db)):
+    try:
+        record = db.query(PromptRecord).filter(PromptRecord.id == record_id).first()
+        if not record:
+            raise HTTPException(status_code=404, detail="Record not found")
+
+        record.grouping_logic = None
+        parts = []
+        if record.column_header:
+            parts.append(record.column_header)
+        if record.filters_logic:
+            parts.append(record.filters_logic)
+        if record.synonyms_logic:
+            parts.append(record.synonyms_logic)
+        record.final_prompt_text = "\n".join(parts)
+
+        db.commit()
+        return {"message": "Grouping removed"}
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        traceback.print_exc()
+        return JSONResponse(status_code=500, content={"detail": f"Remove grouping failed: {str(e)}"})

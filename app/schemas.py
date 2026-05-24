@@ -32,6 +32,14 @@ class GeneratePromptRequest(BaseModel):
     # drawing
     drawing_target_field: Optional[str] = None
 
+    # runtime only (not stored)
+    hint_note: Optional[str] = None
+    global_synonyms: Optional[str] = None  # JSON: {"word": ["variant1", ...]}
+
+
+class ApplyGroupingRequest(BaseModel):
+    placeholder_ids: List[int]
+
 
 class ValidationResult(BaseModel):
     status: str
@@ -96,9 +104,9 @@ class PromptRecordResponse(BaseModel):
     filters_logic: Optional[str]
     synonyms_logic: Optional[str]
     grouping_logic: Optional[str]
-    final_prompt_text: str
+    final_prompt_text: Optional[str] = ""
 
-    validation_status: str
+    validation_status: Optional[str] = "valid"
     validation_issues: Optional[str]
 
     class Config:
